@@ -264,11 +264,11 @@ After each extraction, the device's data is passed to the `template` referenced 
 
 
 ```jinja
-{% for entry in vars['logging']['levels'] -%}
+{% for entry in vars['logging']['levels'] %}
 - parents:
   lines:
   - 'logging {{ entry['type'] }} {{ entry['level'] }}'
-{% endfor -%}
+{% endfor %}
 ```
 
 The template produces yaml.  Both parents and lines can be generated.  Parents and lines are convenience keys to aid in the use of the template for later automation.
@@ -343,9 +343,9 @@ The corresponding temple needs to be modified as well. Open `./templates/cisco_i
 **Note: Sequence matters.** The jinja template has to produce the exact syntax and sequence of lines found and extracted from the configuration.  This validates the completeness and intergrity of the data.
 
 ```jinja
-{% if 'spanning-tree' in vars['interfaces'][interface] and 'bpduguard' in vars['interfaces'][interface]['spanning-tree'] and vars['interfaces'][interface]['spanning-tree']['bpduguard'] -%}
+{% if 'spanning-tree' in vars['interfaces'][interface] and 'bpduguard' in vars['interfaces'][interface]['spanning-tree'] and vars['interfaces'][interface]['spanning-tree']['bpduguard'] %}
 - " spanning-tree bpduguard enable"
-{% endif -%}{# bpduguard -#}
+{% endif %}{# bpduguard #}
 ```
 
 The process would be repeated until the errors are removed.
@@ -388,4 +388,1011 @@ To skip the boot and aaa parsers:
 
 ```
 python runparse.py --skip-tags extended boot aaa
+```
+
+### Using netcopa output with Ansible
+
+See this repo for an example of using the netcopa output in Ansible
+
+https://github.com/cidrblock/ansible_and_netcopa
+
+Note: Two changes needed to be made
+
+- The `vars` key was removed from the host_vars file.
+- An additional blank line was added to the top of the template to force a line feed before `- parents`
+
+The example doesn't account for the removal of lines from the config, a `default interface` could be added or addtional logic to compare the template output to the running configuration and prepend deltas with `no`.
+
+### Rebuilding an entire configuration from the host_vars
+
+Since the templates exisit for each OS, the host_vars files can be played backwards through netcopa, recreating the configuration.
+
+Note:  The global keyword sequence will vary because the templates are processed in alphabetical order:
+
+Using the rebuild.py python script:
+
+```
+python rebuild.py
+*****  Loading configurations
+cisco_ios-00                                                           [ok]
+cisco_ios-xe-00                                                        [ok]
+*****  Retrieving OS
+cisco_ios-00                                                           [ok]
+cisco_ios-xe-00                                                        [ok]
+*****  Rebuilding config
+cisco_ios-00 cisco_ios/aaa/groups.j2                                   [ok]
+cisco_ios-00 cisco_ios/aaa/new_model.j2                                [ok]
+cisco_ios-00 cisco_ios/aaa/session_id.j2                               [ok]
+cisco_ios-00 cisco_ios/aaa/accounting/connection.j2                    [ok]
+cisco_ios-00 cisco_ios/aaa/accounting/exec.j2                          [ok]
+cisco_ios-00 cisco_ios/aaa/accounting/system.j2                        [ok]
+cisco_ios-00 cisco_ios/aaa/authentication/login.j2                     [ok]
+cisco_ios-00 cisco_ios/aaa/authorization/commands.j2                   [ok]
+cisco_ios-00 cisco_ios/aaa/authorization/exec.j2                       [ok]
+cisco_ios-00 cisco_ios/access-list/extended.j2                         [ok]
+cisco_ios-00 cisco_ios/access-list/standard.j2                         [ok]
+cisco_ios-00 cisco_ios/alias/default.j2                                [skipped]
+cisco_ios-00 cisco_ios/banners/default.j2                              [ok]
+cisco_ios-00 cisco_ios/clock/timezone.j2                               [ok]
+cisco_ios-00 cisco_ios/control-plane/default.j2                        [ok]
+cisco_ios-00 cisco_ios/enable/secret.j2                                [ok]
+cisco_ios-00 cisco_ios/hostname/default.j2                             [ok]
+cisco_ios-00 cisco_ios/interface/default.j2                            [ok]
+cisco_ios-00 cisco_ios/ip/classless.j2                                 [ok]
+cisco_ios-00 cisco_ios/ip/domain_list.j2                               [ok]
+cisco_ios-00 cisco_ios/ip/domain_name.j2                               [ok]
+cisco_ios-00 cisco_ios/ip/http_secure-server.j2                        [ok]
+cisco_ios-00 cisco_ios/ip/http_server.j2                               [ok]
+cisco_ios-00 cisco_ios/ip/name-server.j2                               [ok]
+cisco_ios-00 cisco_ios/ip/ospf_name-lookup.j2                          [ok]
+cisco_ios-00 cisco_ios/ip/prefix-lists.j2                              [ok]
+cisco_ios-00 cisco_ios/ip/routes.j2                                    [ok]
+cisco_ios-00 cisco_ios/ip/routing.j2                                   [ok]
+cisco_ios-00 cisco_ios/ip/source-route.j2                              [ok]
+cisco_ios-00 cisco_ios/ip/subnet-zero.j2                               [ok]
+cisco_ios-00 cisco_ios/ip/tacacs_source-interface.j2                   [ok]
+cisco_ios-00 cisco_ios/ip/access-lists/standard.j2                     [ok]
+cisco_ios-00 cisco_ios/line/con_aux.j2                                 [ok]
+cisco_ios-00 cisco_ios/line/vty.j2                                     [ok]
+cisco_ios-00 cisco_ios/logging/facility.j2                             [ok]
+cisco_ios-00 cisco_ios/logging/hosts.j2                                [ok]
+cisco_ios-00 cisco_ios/logging/levels.j2                               [ok]
+cisco_ios-00 cisco_ios/logging/source-interface.j2                     [skipped]
+cisco_ios-00 cisco_ios/ntp/servers.j2                                  [ok]
+cisco_ios-00 cisco_ios/ntp/source.j2                                   [ok]
+cisco_ios-00 cisco_ios/route-maps/default.j2                           [ok]
+cisco_ios-00 cisco_ios/router/eigrp.j2                                 [ok]
+cisco_ios-00 cisco_ios/router/ospf.j2                                  [ok]
+cisco_ios-00 cisco_ios/service/disabled.j2                             [ok]
+cisco_ios-00 cisco_ios/service/enabled.j2                              [ok]
+cisco_ios-00 cisco_ios/service/timestamps.j2                           [ok]
+cisco_ios-00 cisco_ios/snmp/default.j2                                 [skipped]
+cisco_ios-00 cisco_ios/snmp/server/communities.j2                      [ok]
+cisco_ios-00 cisco_ios/snmp/server/contact.j2                          [ok]
+cisco_ios-00 cisco_ios/snmp/server/location.j2                         [ok]
+cisco_ios-00 cisco_ios/snmp/server/view.j2                             [ok]
+cisco_ios-00 cisco_ios/spanning-tree/extend_system-id.j2               [ok]
+cisco_ios-00 cisco_ios/spanning-tree/mode.j2                           [ok]
+cisco_ios-00 cisco_ios/tacacs-server/directed-request.j2               [ok]
+cisco_ios-00 cisco_ios/tacacs-server/hosts.j2                          [ok]
+cisco_ios-00 cisco_ios/tacacs-server/hosts_keyed.j2                    [skipped]
+cisco_ios-00 cisco_ios/tacacs-server/key.j2                            [ok]
+cisco_ios-00 cisco_ios/tacacs-server/timeout.j2                        [ok]
+cisco_ios-00 cisco_ios/udld/default.j2                                 [ok]
+cisco_ios-00 cisco_ios/username/default.j2                             [ok]
+cisco_ios-00 cisco_ios/version/default.j2                              [ok]
+cisco_ios-00 cisco_ios/vlan/internal_allocation_policy.j2              [ok]
+cisco_ios-xe-00 cisco_ios-xe/aaa/groups.j2                             [ok]
+cisco_ios-xe-00 cisco_ios-xe/aaa/new_model.j2                          [ok]
+cisco_ios-xe-00 cisco_ios-xe/aaa/session_id.j2                         [ok]
+cisco_ios-xe-00 cisco_ios-xe/aaa/accounting/connection.j2              [ok]
+cisco_ios-xe-00 cisco_ios-xe/aaa/accounting/exec.j2                    [ok]
+cisco_ios-xe-00 cisco_ios-xe/aaa/accounting/system.j2                  [ok]
+cisco_ios-xe-00 cisco_ios-xe/aaa/authentication/login.j2               [ok]
+cisco_ios-xe-00 cisco_ios-xe/aaa/authorization/commands.j2             [ok]
+cisco_ios-xe-00 cisco_ios-xe/aaa/authorization/default.j2              [ok]
+cisco_ios-xe-00 cisco_ios-xe/access-list/extended.j2                   [skipped]
+cisco_ios-xe-00 cisco_ios-xe/access-list/standard.j2                   [ok]
+cisco_ios-xe-00 cisco_ios-xe/alias/default.j2                          [ok]
+cisco_ios-xe-00 cisco_ios-xe/banners/default.j2                        [ok]
+cisco_ios-xe-00 cisco_ios-xe/boot/default.j2                           [ok]
+cisco_ios-xe-00 cisco_ios-xe/class-maps/default.j2                     [ok]
+cisco_ios-xe-00 cisco_ios-xe/clock/timezone.j2                         [ok]
+cisco_ios-xe-00 cisco_ios-xe/control-plane/default.j2                  [ok]
+cisco_ios-xe-00 cisco_ios-xe/enable/secret.j2                          [ok]
+cisco_ios-xe-00 cisco_ios-xe/hostname/default.j2                       [ok]
+cisco_ios-xe-00 cisco_ios-xe/interface/default.j2                      [ok]
+cisco_ios-xe-00 cisco_ios-xe/ip/classless.j2                           [ok]
+cisco_ios-xe-00 cisco_ios-xe/ip/domain_list.j2                         [ok]
+cisco_ios-xe-00 cisco_ios-xe/ip/domain_name.j2                         [ok]
+cisco_ios-xe-00 cisco_ios-xe/ip/flow.j2                                [ok]
+cisco_ios-xe-00 cisco_ios-xe/ip/http_secure-server.j2                  [ok]
+cisco_ios-xe-00 cisco_ios-xe/ip/http_server.j2                         [ok]
+cisco_ios-xe-00 cisco_ios-xe/ip/multicast_routing.j2                   [ok]
+cisco_ios-xe-00 cisco_ios-xe/ip/name-server.j2                         [ok]
+cisco_ios-xe-00 cisco_ios-xe/ip/ospf_name-lookup.j2                    [ok]
+cisco_ios-xe-00 cisco_ios-xe/ip/pim.j2                                 [ok]
+cisco_ios-xe-00 cisco_ios-xe/ip/prefix-lists.j2                        [ok]
+cisco_ios-xe-00 cisco_ios-xe/ip/routes.j2                              [ok]
+cisco_ios-xe-00 cisco_ios-xe/ip/routing.j2                             [skipped]
+cisco_ios-xe-00 cisco_ios-xe/ip/source-route.j2                        [ok]
+cisco_ios-xe-00 cisco_ios-xe/ip/subnet-zero.j2                         [ok]
+cisco_ios-xe-00 cisco_ios-xe/ip/tacacs_source-interface.j2             [ok]
+cisco_ios-xe-00 cisco_ios-xe/ip/access-lists/extended.j2               [ok]
+cisco_ios-xe-00 cisco_ios-xe/ip/access-lists/standard.j2               [ok]
+cisco_ios-xe-00 cisco_ios-xe/line/con_aux.j2                           [ok]
+cisco_ios-xe-00 cisco_ios-xe/line/vty.j2                               [ok]
+cisco_ios-xe-00 cisco_ios-xe/logging/facility.j2                       [ok]
+cisco_ios-xe-00 cisco_ios-xe/logging/hosts.j2                          [ok]
+cisco_ios-xe-00 cisco_ios-xe/logging/levels.j2                         [ok]
+cisco_ios-xe-00 cisco_ios-xe/logging/source-interface.j2               [ok]
+cisco_ios-xe-00 cisco_ios-xe/multilink/default.j2                      [ok]
+cisco_ios-xe-00 cisco_ios-xe/ntp/servers.j2                            [ok]
+cisco_ios-xe-00 cisco_ios-xe/ntp/source.j2                             [ok]
+cisco_ios-xe-00 cisco_ios-xe/policy-maps/default.j2                    [ok]
+cisco_ios-xe-00 cisco_ios-xe/redundancy/default.j2                     [ok]
+cisco_ios-xe-00 cisco_ios-xe/route-maps/default.j2                     [ok]
+cisco_ios-xe-00 cisco_ios-xe/router/bgp.j2                             [ok]
+cisco_ios-xe-00 cisco_ios-xe/router/eigrp.j2                           [skipped]
+cisco_ios-xe-00 cisco_ios-xe/router/ospf.j2                            [ok]
+cisco_ios-xe-00 cisco_ios-xe/service/disabled.j2                       [skipped]
+cisco_ios-xe-00 cisco_ios-xe/service/enabled.j2                        [ok]
+cisco_ios-xe-00 cisco_ios-xe/service/timestamps.j2                     [ok]
+cisco_ios-xe-00 cisco_ios-xe/snmp/default.j2                           [ok]
+cisco_ios-xe-00 cisco_ios-xe/snmp/server/communities.j2                [ok]
+cisco_ios-xe-00 cisco_ios-xe/snmp/server/contact.j2                    [ok]
+cisco_ios-xe-00 cisco_ios-xe/snmp/server/location.j2                   [ok]
+cisco_ios-xe-00 cisco_ios-xe/snmp/server/view.j2                       [skipped]
+cisco_ios-xe-00 cisco_ios-xe/spanning-tree/extend_system-id.j2         [skipped]
+cisco_ios-xe-00 cisco_ios-xe/spanning-tree/mode.j2                     [skipped]
+cisco_ios-xe-00 cisco_ios-xe/tacacs-server/directed-request.j2         [skipped]
+cisco_ios-xe-00 cisco_ios-xe/tacacs-server/hosts.j2                    [ok]
+cisco_ios-xe-00 cisco_ios-xe/tacacs-server/hosts_keyed.j2              [skipped]
+cisco_ios-xe-00 cisco_ios-xe/tacacs-server/key.j2                      [ok]
+cisco_ios-xe-00 cisco_ios-xe/tacacs-server/timeout.j2                  [skipped]
+cisco_ios-xe-00 cisco_ios-xe/udld/default.j2                           [skipped]
+cisco_ios-xe-00 cisco_ios-xe/username/default.j2                       [ok]
+cisco_ios-xe-00 cisco_ios-xe/version/default.j2                        [ok]
+cisco_ios-xe-00 cisco_ios-xe/vlan/internal_allocation_policy.j2        [skipped]
+cisco_ios-xe-00 cisco_ios-xe/vrfs/default.j2                           [ok]
+*****  Writing rebuilt config to file
+cisco_ios-00                                                           [ok]
+cisco_ios-xe-00                                                        [ok]
+```
+
+The restores configurations will be place in `./configurations.rebuilt`
+
+## netcopa Data Model
+
+This is here as an example.  See the utilities folder in the project for an example of how to extract the model from the parsers.
+
+### aaa accounting exec
+```yaml
+aaa:
+  accounting:
+    connection:
+      default:
+        events: '{{ events }}'
+        methods: '{{ groups.replace("group", "^group").split("^")[1:] + methods.split(''
+          '') }}'
+    exec:
+      default:
+        events: '{{ events }}'
+        methods: '{{ groups.replace("group", "^group").split("^")[1:] + methods.split(''
+          '') }}'
+    system:
+      default:
+        events: '{{ events }}'
+        methods: '{{ groups.replace("group", "^group").split("^")[1:] + methods.split(''
+          '') }}'
+
+```
+### aaa authentication login
+```yaml
+aaa:
+  authentication:
+    login:
+      activated:
+        methods:
+        - '{{ methods.split('' '') }}'
+      default:
+        methods: '{{ groups.replace("group", "^group").split("^")[1:] + methods.split(''
+          '') }}'
+
+```
+### aaa authorization
+```yaml
+aaa:
+  authorization:
+    commands:
+      default:
+        methods: '{{ groups.replace("group", "^group").split("^")[1:] + methods.split(''
+          '') }}'
+        privilege_level: '{{ privilege_level }}'
+    '{{ aaa_kind }}':
+      activated:
+        methods: '{{ groups.replace("group ", "^group ").split("^")[1:] + methods.split(''
+          '') }}'
+      default:
+        methods: '{{ groups.replace("group", "^group").split("^")[1:] + methods.split(''
+          '') }}'
+
+```
+### aaa group
+```yaml
+aaa:
+  groups:
+    '{{ group_name }}':
+      name: '{{ group_name }}'
+      servers:
+      - encryption_type: '{{ encryption_type }}'
+        ip: '{{ server_private_ip }}'
+        key: '{{ key }}'
+        private: true
+      tacacs_source_interface: '{{ source_interface }}'
+      type: '{{ group_type }}'
+
+```
+### aaa session-id
+```yaml
+aaa:
+  new_model: true
+  session_id: '{{ session_id }}'
+
+```
+### access-list extended
+```yaml
+access_lists:
+  '{{ number }}':
+    entries:
+    - action: '{{ action }}'
+      destination_network: '{{ destination_network }}'
+      destination_wildcard: 0.0.0.0
+      protocol: '{{ protocol }}'
+      source_network: any
+      source_wildcard: any
+      whitespace: '"{{ whitespace }}"'
+    number: '{{ number  }}'
+    type: extended
+
+```
+### access-list standard
+```yaml
+access_lists:
+  '{{ number }}':
+    entries:
+    - action: '{{ action }}'
+      source_network: '{{ source_network }}'
+      source_wildcard: 0.0.0.0
+      whitespace: '"{{ whitespace }}"'
+    - action: '{{ action }}'
+      source_network: '{{ source_network }}'
+      source_wildcard: any
+      whitespace: '"{{ whitespace }}"'
+    - action: '{{ action }}'
+      source_network: '{{ source_network }}'
+      source_wildcard: '{{ source_wildcard }}'
+      whitespace: '"{{ whitespace }}"'
+    - remark: '{{ remark }}'
+    number: '{{ number  }}'
+    type: standard
+
+```
+### alias
+```yaml
+aliases:
+- alias: '{{ alias }}'
+  command: '{{ command }}'
+  mode: '{{ mode }}'
+
+```
+### banner
+```yaml
+banner:
+  '{{ type }}':
+    delimeter: '{{ delimeter }}'
+    text:
+    - '"{{ text_line }}"'
+
+```
+### boot
+```yaml
+boot:
+  system:
+  - filename: '{{ filename }}'
+    flash_fs: '{{ flash_fs }}'
+    from: flash
+
+```
+### class-map
+```yaml
+class_maps:
+  '{{ name }}':
+    entries:
+    - dscp_values: '{{ dscp_values.split() }}'
+      type: dscp
+    - name: '{{ access_group_name }}'
+      type: access-group
+    match_type: '{{ match_type }}'
+    name: '{{ name }}'
+
+```
+### clock timezone
+```yaml
+clock:
+  hours_offset: '{{ hours_offset }}'
+  minutes_offset: '{{ minutes_offset }}'
+  timezone: '{{ timezone }}'
+
+```
+### control-plane
+```yaml
+control_plane: null
+
+```
+### enable secret
+```yaml
+enable:
+  secret:
+    encryption_type: '{{ encryption_type }}'
+    secret: '{{ secret }}'
+
+```
+### hostname
+```yaml
+hostname: '{{ hostname }}'
+
+```
+### interface
+```yaml
+interfaces:
+  '{{ name }}':
+    bandwidth: '{{ bandwidth }}'
+    channel_group: '{{ channel_group }}'
+    channel_group_mode: '{{ channel_group_mode.split() }}'
+    description: '"{{ description }}"'
+    encapsulation:
+      protocol: '{{ encapsulation_protocol }}'
+      tag: '{{ encapsulation_tag }}'
+    ip:
+      address:
+        ipv4_address: '{{ ipv4_address }}'
+        ipv4_netmask: '{{ ipv4_netmask }}'
+        negate: true
+      flow:
+        directions:
+        - '{{ flow_direction }}'
+      pim:
+        mode: '{{ pim_mode }}'
+    name: '{{ name }}'
+    negotiation:
+      negate: true
+      type: '{{ negotiation }}'
+    service_policies:
+    - direction: '{{ service_policy_direction }}'
+      name: '{{ service_policy_name }}'
+    shutdown: true
+    spanning-tree:
+      bpduguard: true
+      portfast: true
+    switchport:
+      access:
+        vlan: '{{ vlan }}'
+      mode: '{{ mode.split() }}'
+      negate: true
+      present: true
+      trunk:
+        allowed_vlans:
+          add: '"{{ vlans }}"'
+          vlans: '"{{ vlans }}"'
+        native_vlan: '{{ vlan }}'
+      voice:
+        vlan: '{{ voice_vlan }}'
+    vrf: '{{ vrf }}'
+
+```
+### ip access-list extended
+```yaml
+ip:
+  access_lists:
+    '{{ name }}':
+      entries:
+      - action: '{{ action }}'
+        destination_network: 0.0.0.0
+        destination_wildcard: 255.255.255.255
+        protocol: '{{ protocol }}'
+        source_network: 0.0.0.0
+        source_wildcard: 255.255.255.255
+      - action: '{{ action }}'
+        destination_network: '{{ destination_network }}'
+        destination_wildcard: 0.0.0.0
+        protocol: '{{ protocol }}'
+        source_network: 0.0.0.0
+        source_wildcard: 255.255.255.255
+      - action: '{{ action }}'
+        destination_network: 0.0.0.0
+        destination_wildcard: 255.255.255.255
+        protocol: '{{ protocol }}'
+        source_network: '{{ source_network }}'
+        source_wildcard: 0.0.0.0
+      - action: '{{ action }}'
+        destination_network: '{{ destination_network }}'
+        destination_wildcard: 0.0.0.0
+        protocol: '{{ protocol }}'
+        source_network: '{{ source_network }}'
+        source_wildcard: '{{ source_wildcard }}'
+      - action: '{{ action }}'
+        destination_network: '{{ destination_network }}'
+        destination_wildcard: '{{ destination_wildcard }}'
+        protocol: '{{ protocol }}'
+        source_network: '{{ source_network }}'
+        source_wildcard: 0.0.0.0
+      - action: '{{ action }}'
+        destination_network: 0.0.0.0
+        destination_port: '{{ destination_port }}'
+        destination_wildcard: 255.255.255.255
+        protocol: '{{ protocol }}'
+        source_network: 0.0.0.0
+        source_wildcard: 255.255.255.255
+      - action: '{{ action }}'
+        destination_network: 0.0.0.0
+        destination_wildcard: 255.255.255.255
+        protocol: '{{ protocol }}'
+        source_network: 0.0.0.0
+        source_port: '{{ source_port }}'
+        source_wildcard: 255.255.255.255
+      - action: '{{ action }}'
+        destination_network: 0.0.0.0
+        destination_wildcard: 255.255.255.255
+        protocol: '{{ protocol }}'
+        source_network: '{{ source_network }}'
+        source_port: '{{ source_port }}'
+        source_wildcard: 0.0.0.0
+      - action: '{{ action }}'
+        destination_network: 0.0.0.0
+        destination_port: '{{ destination_port }}'
+        destination_wildcard: 255.255.255.255
+        protocol: '{{ protocol }}'
+        source_network: '{{ source_network }}'
+        source_wildcard: 0.0.0.0
+      - action: '{{ action }}'
+        destination_network: '{{ destination_network }}'
+        destination_port: '{{ destination_port }}'
+        destination_wildcard: 0.0.0.0
+        protocol: '{{ protocol }}'
+        source_network: 0.0.0.0
+        source_wildcard: 255.255.255.255
+      - action: '{{ action }}'
+        destination_network: '{{ destination_network }}'
+        destination_port: '{{ destination_port }}'
+        destination_wildcard: '{{ destination_wildcard }}'
+        protocol: '{{ protocol }}'
+        source_network: 0.0.0.0
+        source_wildcard: 255.255.255.255
+      - action: '{{ action }}'
+        destination_network: 0.0.0.0
+        destination_wildcard: 255.255.255.255
+        protocol: '{{ protocol }}'
+        source_network: '{{ source_network }}'
+        source_port: '{{ source_port }}'
+        source_wildcard: '{{ source_wildcard }}'
+      - action: '{{ action }}'
+        destination_network: 0.0.0.0
+        destination_port: '{{ destination_port }}'
+        destination_wildcard: 255.255.255.255
+        protocol: '{{ protocol }}'
+        source_network: '{{ source_network }}'
+        source_wildcard: '{{ source_wildcard }}'
+      - action: '{{ action }}'
+        destination_network: '{{ destination_network }}'
+        destination_port: '{{ destination_port }}'
+        destination_wildcard: 0.0.0.0
+        protocol: '{{ protocol }}'
+        source_network: '{{ source_network }}'
+        source_wildcard: '{{ source_wildcard }}'
+      - action: '{{ action }}'
+        destination_network: '{{ destination_network }}'
+        destination_wildcard: '{{ destination_wildcard }}'
+        protocol: '{{ protocol }}'
+        source_network: '{{ source_network }}'
+        source_port: '{{ source_port }}'
+        source_wildcard: 0.0.0.0
+      - action: '{{ action }}'
+        destination_network: '{{ destination_network }}'
+        destination_port: '{{ destination_port }}'
+        destination_wildcard: '{{ destination_wildcard }}'
+        protocol: '{{ protocol }}'
+        source_network: '{{ source_network }}'
+        source_wildcard: '{{ source_wildcard }}'
+      - action: '{{ action }}'
+        destination_network: '{{ destination_network }}'
+        destination_wildcard: '{{ destination_wildcard }}'
+        protocol: '{{ protocol }}'
+        source_network: '{{ source_network }}'
+        source_port: '{{ source_port }}'
+        source_wildcard: '{{ source_wildcard }}'
+      - action: '{{ action }}'
+        destination_end_port: '{{ destination_end_port }}'
+        destination_network: 0.0.0.0
+        destination_start_port: '{{ destination_start_port }}'
+        destination_wildcard: 255.255.255.255
+        protocol: '{{ protocol }}'
+        source_network: 0.0.0.0
+        source_wildcard: 255.255.255.255
+      - action: '{{ action }}'
+        destination_network: 0.0.0.0
+        destination_wildcard: 255.255.255.255
+        protocol: '{{ protocol }}'
+        source_end_port: '{{ source_end_port }}'
+        source_network: 0.0.0.0
+        source_start_port: '{{ source_start_port }}'
+        source_wildcard: 255.255.255.255
+      - action: '{{ action }}'
+        destination_network: 0.0.0.0
+        destination_wildcard: 255.255.255.255
+        protocol: '{{ protocol }}'
+        source_end_port: '{{ source_end_port }}'
+        source_network: '{{ source_network }}'
+        source_start_port: '{{  source_start_port }}'
+        source_wildcard: '{{ source_wildcard }}'
+      - action: '{{ action }}'
+        destination_network: 0.0.0.0
+        destination_wildcard: 255.255.255.255
+        protocol: '{{ protocol }}'
+        source_end_port: '{{ source_end_port }}'
+        source_network: '{{ source_network }}'
+        source_start_port: '{{ source_start_port }}'
+        source_wildcard: 0.0.0.0
+      - action: '{{ action }}'
+        destination_end_port: '{{ destination_end_port }}'
+        destination_network: 0.0.0.0
+        destination_start_port: '{{ destination_start_port }}'
+        destination_wildcard: 255.255.255.255
+        protocol: '{{ protocol }}'
+        source_network: '{{ source_network }}'
+        source_wildcard: 0.0.0.0
+      - action: '{{ action }}'
+        destination_end_port: '{{ destination_end_port }}'
+        destination_network: '{{ destination_network }}'
+        destination_start_port: '{{ destination_start_port }}'
+        destination_wildcard: 0.0.0.0
+        protocol: '{{ protocol }}'
+        source_network: 0.0.0.0
+        source_wildcard: 255.255.255.255
+      - action: '{{ action }}'
+        destination_end_port: '{{ destination_end_port }}'
+        destination_network: 0.0.0.0
+        destination_start_port: '{{ destination_start_port }}'
+        destination_wildcard: 255.255.255.255
+        protocol: '{{ protocol }}'
+        source_network: '{{ source_network }}'
+        source_wildcard: '{{ source_wildcard}}'
+      - action: '{{ action }}'
+        destination_network: '{{ destination_network }}'
+        destination_wildcard: '{{ destination_wildcard }}'
+        protocol: '{{ protocol }}'
+        source_end_port: '{{ source_end_port }}'
+        source_network: 0.0.0.0
+        source_start_port: '{{ source_start_port }}'
+        source_wildcard: 255.255.255.255
+      - action: '{{ action }}'
+        destination_end_port: '{{ destination_end_port }}'
+        destination_network: '{{ destination_network }}'
+        destination_start_port: '{{ destination_start_port }}'
+        destination_wildcard: '{{ destination_wildcard }}'
+        protocol: '{{ protocol }}'
+        source_network: 0.0.0.0
+        source_wildcard: 255.255.255.255
+      - action: '{{ action }}'
+        destination_network: '{{ destination_network }}'
+        destination_wildcard: '{{ destination_wildcard }}'
+        protocol: '{{ protocol }}'
+        source_end_port: '{{ source_end_port }}'
+        source_network: '{{ source_network }}'
+        source_start_port: '{{ source_start_port }}'
+        source_wildcard: '{{ source_wildcard }}'
+      - action: '{{ action }}'
+        destination_end_port: '{{ destination_end_port }}'
+        destination_network: '{{ destination_network }}'
+        destination_start_port: '{{ destination_start_port }}'
+        destination_wildcard: '{{ destination_wildcard }}'
+        protocol: '{{ protocol }}'
+        source_network: '{{ source_network }}'
+        source_wildcard: '{{ source_wildcard }}'
+      - action: '{{ action }}'
+        destination_dscp: '{{ destination_dscp }}'
+        destination_network: 0.0.0.0
+        destination_wildcard: 255.255.255.255
+        protocol: '{{ protocol }}'
+        source_network: 0.0.0.0
+        source_wildcard: 255.255.255.255
+      - remark: '"{{ remark }}"'
+      - remark: null
+      name: '{{ name }}'
+      type: extended
+
+```
+### ip access-list standard
+```yaml
+ip:
+  access_lists:
+    '{{ name }}':
+      entries:
+      - action: '{{ action }}'
+        source_network: '{{ source_network }}'
+        source_wildcard: 0.0.0.0
+      - action: '{{ action }}'
+        source_network: '{{ source_network }}'
+        source_wildcard: any
+      - action: '{{ action }}'
+        source_network: '{{ source_network }}'
+        source_wildcard: '{{ source_wildcard }}'
+      - remark: '"{{ remark }}"'
+      - remark: null
+      name: '{{ name }}'
+      type: standard
+
+```
+### ip flow-export
+```yaml
+ip:
+  flow_cache:
+    timeout:
+      active:
+        minutes: '{{ active_timeout }}'
+  flow_export:
+    destinations:
+    - ipv4_address: '{{ destination }}'
+      port: '{{ destination_port }}'
+    source: '{{ source }}'
+    version: '{{ source }}'
+
+```
+### ip multicast routing distributed
+```yaml
+ip:
+  classless: true
+  domain_lists:
+  - domain_name: '{{ domain_list }}'
+  domain_names:
+  - domain_name: '{{ domain_name }}'
+  http:
+    secure_server: false
+    server: false
+  multicast_routing:
+    distributed: true
+    enabled: true
+  name-servers:
+  - name_server: '{{ name_server_ip }}'
+  ospf_name-lookup: true
+  pim:
+    rp_address: '{{ rp_address }}'
+  routes:
+  - netmask: '{{ netmask }}'
+    network: '{{ network }}'
+    next_hop: '{{ next_hop }}'
+  source-route: true
+  subnet-zero: true
+  tacacs:
+    source_interface: '{{ source_interface }}'
+
+```
+### ip prefix-list
+```yaml
+ip:
+  prefix_lists:
+    '{{ name }}':
+      entries:
+      - action: '{{ action }}'
+        netmask: '{{ netmask }}'
+        network: '{{ network }}'
+        sequence: '{{ sequence }}'
+      - action: '{{ action }}'
+        le_bits: '{{ le_bits }}'
+        netmask: '{{ netmask }}'
+        network: '{{ network }}'
+        sequence: '{{ sequence }}'
+      name: '{{ name }}'
+
+```
+### line con
+```yaml
+line:
+  '{{ type }}':
+    numbers:
+      '{{ number }}':
+        escape_character: '{{ escape_character }}'
+        exec_timeout:
+          minutes: '{{ minutes }}'
+          seconds: '{{ seconds }}'
+        login:
+          authentication: '{{ named_list }}'
+        number: '{{ number }}'
+        password:
+          encryption_type: '{{ encryption_type }}'
+          password: '{{ password }}'
+        stopbits: '{{ stopbits }}'
+        transport:
+          '{{ direction }}':
+            protocols: '{{ protocols.split() }}'
+    type: '{{ type }}'
+
+```
+### line con
+```yaml
+line:
+  vty:
+    '{{ start }}to{{ finish }}':
+      escape_character: '{{ escape_character }}'
+      exec_timeout:
+        minutes: '{{ minutes }}'
+        seconds: '{{ seconds }}'
+      finish: '{{ finish }}'
+      password:
+        encryption_type: '{{ encryption_type }}'
+        password: '{{ password }}'
+      privilege_level: '{{ privilege_level }}'
+      start: '{{ start }}'
+      transport:
+        '{{ direction }}':
+          protocols: '{{ protocols.split() }}'
+
+```
+### logging source
+```yaml
+logging:
+  facility: '{{ facility }}'
+  hosts:
+  - host: '{{ host }}'
+  levels:
+  - level: '{{ level }}'
+    type: '{{ type }}'
+  source_interface: '{{ source_interface }}'
+
+```
+### multilink
+```yaml
+multilink:
+  bundle_name:
+    method: '{{ method }}'
+
+```
+### ntp source
+```yaml
+ntp:
+  servers:
+  - server_ip: '{{ server_ip }}'
+  source:
+    interface: '{{ interface }}'
+
+```
+### policy-map
+```yaml
+policy_maps:
+  '{{ policy_name }}':
+    classes:
+      '{{ class_name }}':
+        name: '{{ class_name }}'
+    description: '"{{ description }}"'
+    name: '{{ policy_name }}'
+    sequence:
+    - '{{ class_name }}'
+
+```
+### redundancy
+```yaml
+redundancy:
+  enabled: true
+  mode: '{{ mode }}'
+
+```
+### route-map
+```yaml
+route_maps:
+  '{{ name }}':
+    name: '{{ name }}'
+    statements:
+      '{{ sequence }}':
+        action: '{{ action }}'
+        clauses:
+        - clause: '{{ clause }}'
+          value: '"{{ value }}"'
+        sequence: '{{ sequence }}'
+
+```
+### router bgp
+```yaml
+router:
+  bgp:
+    '{{ parent_process_id }}':
+      address_families:
+        '"{{ ip_version }}"':
+          ip_version: '{{ ip_version }}'
+          vrfs:
+            '{{ vrf_name }}':
+              vrf_name: '{{ vrf_name }}'
+      address_family_delimeter: bang
+      address_family_exit_command: exit-address-family
+      aggregate_addresses:
+      - netmask: '{{ aggregate_netmask }}'
+        network: '{{ aggregate_address }}'
+        summary_only: true
+      auto_summary: false
+      log_neighbor_changes: true
+      neighbors:
+        '{{ ipv4_address }}':
+          default_originate:
+            enabled: true
+            route_map: '{{ default_originate_route_map }}'
+          description: '"{{ description }}"'
+          ipv4_address: '{{ ipv4_address }}'
+          next_hop_self: true
+          remote_as: '{{ remote_as }}'
+          route_map_in: '{{ route_map_in }}'
+          route_map_out: '{{ route_map_out }}'
+          soft_reconfiguration_inbound: true
+      process_id: '{{ parent_process_id }}'
+      redistribute:
+        ospf:
+          match:
+          - internal
+          - external 1
+          - external 2
+          process_id: '{{ process_id}}'
+          protocol: ospf
+          route_map: '{{ route_map }}'
+        '{{ protocol }}':
+          protocol: '{{ protocol }}'
+      router_id: '{{ router_id }}'
+      synchronization: false
+
+```
+### router ospf
+```yaml
+router:
+  ospf:
+    '{{ parent_process_id }}':
+      auto_cost_reference_bandwidth: '{{ reference_bandwidth }}'
+      default_information:
+        metric: '{{ metric }}'
+        metric_type: '{{ metric_type }}'
+        originate: true
+      distance: '{{ distance }}'
+      distribute_lists:
+      - &id001
+        direction: '{{ direction }}'
+        route_map: '{{ distribute_list_route_map }}'
+      - *id001
+      log_adjacency_changes: true
+      network_statements:
+      - &id002
+        area: '{{ network_area }}'
+        netmask: '{{ network_netmask }}'
+        network: '{{ network_network }}'
+      - *id002
+      passive_interface_default: true
+      passive_interfaces:
+      - &id003
+        interface: '{{ no_passive_interface }}'
+        negate: true
+      - *id003
+      process_id: '{{ parent_process_id }}'
+      redistribute:
+        static:
+          protocol: static
+          subnets: true
+        '{{ protocol }}':
+          metric: '{{ metric }}'
+          metric_types: '{{ metric_types.replace("metric-type", "").split('' '') }}'
+          process_id: '{{ redist_process_id }}'
+          protocol: '{{ protocol }}'
+          route_map: '{{ route_map }}'
+          subnets: true
+          tag: '{{ tag }}'
+      router_id: '{{ router_id }}'
+      summary_addresses:
+      - &id004
+        netmask: '{{ summary_netmask }}'
+        network: '{{ summary_network }}'
+      - *id004
+      vrf: '{{ vrf }}'
+
+```
+### disabled services
+```yaml
+services:
+  disabled:
+  - service_name: '{{ service_name }}'
+  enabled:
+  - service_name: '{{ service_name }}'
+  timestamps:
+  - modifiers: '{{ modifiers.split('' '') }}'
+    type: '{{ type }}'
+
+```
+### snmp ifmib
+```yaml
+snmp:
+  ifmib:
+    ifindex:
+      persist: true
+
+```
+### snmp-server location
+```yaml
+snmp:
+  server:
+    communities:
+    - acl: '{{ acl }}'
+      community: '{{ community }}'
+      type: '{{ type }}'
+    contact: '"{{ contact }}"'
+    location: '"{{ location }}"'
+
+```
+### spanning-tree extend system-id
+```yaml
+spanning-tree:
+  extend_system-id: true
+  mode: '{{ mode }}'
+
+```
+### tacacs-server timeout
+```yaml
+tacacs_server:
+  directed_request: true
+  hosts:
+  - ip: '{{ host }}'
+  - encryption_type: '{{ encryption_type }}'
+    ip: '{{ host }}'
+    password: '{{ password }}'
+  key:
+    encryption_type: '{{ encryption_type }}'
+    password: '{{ password }}'
+  timeout: '{{ timeout }}'
+
+```
+### udld
+```yaml
+udld:
+  enable: true
+
+```
+### username
+```yaml
+usernames:
+- encryption_type: '{{ encryption_type }}'
+  password: '{{ password }}'
+  username: '{{ username }}'
+- encryption_type: '{{ encryption_type }}'
+  secret: '{{ secret }}'
+  username: '{{ username }}'
+
+```
+### version
+```yaml
+version: '{{ version }}'
+
+```
+### svlan internal allocation policy
+```yaml
+vlan:
+  internal_allocation_policy: '{{ direction }}'
+
+```
+### vrf
+```yaml
+vrfs:
+  '{{ name }}':
+    address_families:
+      '{{ address_family }}':
+        address_family: '{{ address_family }}'
+    address_family_delimeter: bang
+    address_family_exit_command: exit-address-family
+    description: '{{ description }}'
+    name: '{{ name }}'
+    route_distinguisher:
+      arbitrary_number: '{{ arbitrary_number }}'
+      as: '{{ as }}'
+
 ```
